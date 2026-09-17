@@ -37,12 +37,10 @@ class AndroidAdsService(
     private val isDebugBuild: Boolean =
         (application.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
 
-    /** Leido por `BannerAdView`: test en debug, real en release. */
-    val bannerAdUnitId: String =
-        if (isDebugBuild) AdMobIds.Android.TEST_BANNER else AdMobIds.Android.PROD_BANNER
+    /** Usar test IDs para evitar crashes. Cambiar a PROD_ cuando AdMob esté configurado. */
+    val bannerAdUnitId: String = AdMobIds.Android.TEST_BANNER
 
-    private val interstitialAdUnitId: String =
-        if (isDebugBuild) AdMobIds.Android.TEST_INTERSTITIAL else AdMobIds.Android.PROD_INTERSTITIAL
+    private val interstitialAdUnitId: String = AdMobIds.Android.TEST_INTERSTITIAL
 
     fun attachActivity(activity: Activity) {
         activityRef = WeakReference(activity)
