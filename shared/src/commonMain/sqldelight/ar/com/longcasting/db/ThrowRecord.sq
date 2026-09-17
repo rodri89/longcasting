@@ -1,0 +1,117 @@
+-- Un tiro. `officialCm` es la medida que vale: la de cinta si fue cargada, si no el
+-- redondeo hacia arriba de la distancia GPS. Todo el historial y las mejores marcas
+-- consultan esta columna.
+CREATE TABLE throw_record (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sessionId INTEGER NOT NULL REFERENCES session(id) ON DELETE CASCADE,
+    shooterId INTEGER NOT NULL REFERENCES shooter(id),
+    sinkerId INTEGER NOT NULL REFERENCES sinker(id),
+    originPointId INTEGER REFERENCES measured_point(id),
+    landingPointId INTEGER REFERENCES measured_point(id),
+    gpsDistanceM REAL,
+    gpsSigmaM REAL,
+    pathLengthM REAL,
+    tapeDistanceCm INTEGER,
+    officialCm INTEGER NOT NULL,
+    bearingDeg REAL,
+    valid INTEGER AS kotlin.Boolean NOT NULL DEFAULT 1,
+    invalidReason TEXT,
+    notes TEXT,
+    createdAt INTEGER NOT NULL,
+    quickMode INTEGER AS kotlin.Boolean NOT NULL DEFAULT 0
+);
+
+CREATE INDEX throw_session ON throw_record(sessionId);
+CREATE INDEX throw_shooter ON throw_record(shooterId);
+
+insert:
+INSERT INTO throw_record(
+    sessionId, shooterId, sinkerId, originPointId, landingPointId,
+    gpsDistanceM, gpsSigmaM, pathLengthM, tapeDistanceCm, officialCm,
+    bearingDeg, valid, invalidReason, notes, createdAt, quickMode
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+setTapeDistance:
+UPDATE throw_record SET tapeDistanceCm = ?, officialCm = ? WHERE id = ?;
+
+setValidity:
+UPDATE throw_record SET valid = ?, invalidReason = ? WHERE id = ?;
+
+delete:
+DELETE FROM throw_record WHERE id = ?;
+
+lastInsertedId:
+SELECT last_insert_rowid();
+
+-- Historial completo con los nombres resueltos. Los filtros nulos se anulan solos,
+-- asi la misma consulta sirve para "todo", "por tirador", "por plomada" y "por sesion".
+selectHistory:
+SELECT
+    t.id,
+    t.sessionId,
+    t.createdAt,
+    t.officialCm,
+    t.gpsDistanceM,
+    t.gpsSigmaM,
+    t.pathLengthM,
+    t.tapeDistanceCm,
+    t.bearingDeg,
+    t.valid,
+    t.invalidReason,
+    t.notes,
+    t.quickMode,
+    s.name AS shooterName,
+    s.id AS shooterId,
+    k.label AS sinkerLabel,
+    k.grams AS sinkerGrams,
+    k.id AS sinkerId
+FROM throw_record t
+JOIN shooter s ON s.id = t.shooterId
+JOIN sinker k ON k.id = t.sinkerId
+WHERE (:shooterId IS NULL OR t.shooterId = :shooterId)
+  AND (:sinkerId IS NULL OR t.sinkerId = :sinkerId)
+  AND (:sessionId IS NULL OR t.sessionId = :sessionId)
+  AND (:fromMillis IS NULL OR t.createdAt >= :fromMillis)
+  AND (:toMillis IS NULL OR t.createdAt < :toMillis)
+ORDER BY t.createdAt DESC;
+
+-- Solo las marcas de tiempo, para derivar en Kotlin que dias tienen tiros cargados. Se hace
+-- asi y no con las funciones de fecha de SQLite para no depender de como cada motor resuelve
+-- la zona horaria local.
+selectThrowTimestamps:
+SELECT createdAt FROM throw_record ORDER BY createdAt DESC;
+
+-- Ranking: mejor marca valida por tirador y plomada, ordenada de mayor a menor.
+--
+-- Agrupa siempre por plomada porque comparar un tiro de 175 g contra uno de 100 g no
+-- significa nada; sin filtro de plomada la pantalla arma un bloque por cada una.
+-- Los tiros invalidados no cuentan.
+selectRanking:
+SELECT
+    s.id AS shooterId,
+    s.name AS shooterName,
+    k.id AS sinkerId,
+    k.label AS sinkerLabel,
+    k.grams AS sinkerGrams,
+    max(t.officialCm) AS bestCm,
+    avg(t.officialCm) AS avgCm,
+    count(*) AS throwCount,
+    max(t.createdAt) AS lastAt,
+    -- Si la mejor marca del grupo se tomo en modo rapido.
+    --
+    -- Se calcula comparando el maximo entre las rapidas contra el maximo general, y no
+    -- leyendo `t.quickMode` como columna suelta: SQLite solo garantiza que las columnas
+    -- sueltas vienen de la fila del maximo cuando hay **un solo** min/max en la consulta, y
+    -- aca hay dos. Con la columna suelta el valor salia de una fila cualquiera.
+    max(CASE WHEN t.quickMode = 1 THEN t.officialCm ELSE -1 END) = max(t.officialCm)
+        AS bestWasQuick
+FROM throw_record t
+JOIN shooter s ON s.id = t.shooterId
+JOIN sinker k ON k.id = t.sinkerId
+WHERE t.valid = 1
+  AND (:shooterId IS NULL OR t.shooterId = :shooterId)
+  AND (:sinkerId IS NULL OR t.sinkerId = :sinkerId)
+  AND (:fromMillis IS NULL OR t.createdAt >= :fromMillis)
+  AND (:toMillis IS NULL OR t.createdAt < :toMillis)
+GROUP BY s.id, k.id
+ORDER BY k.grams ASC, bestCm DESC, s.name COLLATE NOCASE ASC;

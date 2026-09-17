@@ -1,0 +1,15 @@
+-- Ajustes de la app. Clave/valor porque son pocos y conviene que sobrevivan al cierre:
+-- si configuraste 90 segundos de promediado, tiene que seguir en 90 la proxima jornada.
+CREATE TABLE app_setting (
+    key TEXT NOT NULL PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
+selectAll:
+SELECT * FROM app_setting;
+
+get:
+SELECT value FROM app_setting WHERE key = ?;
+
+put:
+INSERT OR REPLACE INTO app_setting(key, value) VALUES (?, ?);

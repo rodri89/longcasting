@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Longcasting usa el GPS para medir la distancia de cada lanzamiento. Necesita ubicación precisa: con ubicación aproximada la medición no funciona.</string>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>location-services</string>
+		<string>gps</string>
+	</array>
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3758335156050794~1281617990</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Usamos esto para mostrarte anuncios más relevantes. Podés seguir usando la app igual.</string>
+	<key>SKAdNetworkItems</key>
+	<array>
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>cstr6suwn9.skadnetwork</string>
+		</dict>
+	</array>
+</dict>
+</plist>

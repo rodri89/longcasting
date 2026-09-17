@@ -1,0 +1,39 @@
+CREATE TABLE shooter (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    notes TEXT,
+    archived INTEGER AS kotlin.Boolean NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL
+);
+
+CREATE UNIQUE INDEX shooter_name_unique ON shooter(name);
+
+selectAll:
+SELECT * FROM shooter WHERE archived = 0 ORDER BY name COLLATE NOCASE ASC;
+
+selectById:
+SELECT * FROM shooter WHERE id = ?;
+
+-- Incluye a los archivados a proposito: siguen ocupando el nombre por el indice unico, asi
+-- que la busqueda tiene que verlos para poder restaurarlos en vez de chocar contra ellos.
+-- COLLATE NOCASE para que "Ana" y "ana" sean la misma persona.
+selectByName:
+SELECT * FROM shooter WHERE name = ? COLLATE NOCASE;
+
+countAll:
+SELECT count(*) FROM shooter;
+
+insert:
+INSERT INTO shooter(name, notes, archived, createdAt) VALUES (?, ?, 0, ?);
+
+update:
+UPDATE shooter SET name = ?, notes = ? WHERE id = ?;
+
+archive:
+UPDATE shooter SET archived = 1 WHERE id = ?;
+
+restore:
+UPDATE shooter SET archived = 0 WHERE id = ?;
+
+lastInsertedId:
+SELECT last_insert_rowid();

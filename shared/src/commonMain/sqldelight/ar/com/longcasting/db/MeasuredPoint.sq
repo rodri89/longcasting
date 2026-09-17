@@ -1,0 +1,30 @@
+-- Resultado de una ocupacion estatica: el punto promediado y su incertidumbre.
+-- `sigmaM` es el error estandar horizontal calculado con tamano de muestra efectivo
+-- (ver StaticPointEstimator), no la desviacion de las muestras crudas.
+CREATE TABLE measured_point (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    lat REAL NOT NULL,
+    lon REAL NOT NULL,
+    altM REAL NOT NULL,
+    sigmaM REAL NOT NULL,
+    samplesAccepted INTEGER NOT NULL,
+    samplesRejected INTEGER NOT NULL,
+    durationSec REAL NOT NULL,
+    spreadRmsM REAL NOT NULL,
+    meanCn0 REAL,
+    satsUsed INTEGER,
+    hasL5 INTEGER AS kotlin.Boolean NOT NULL DEFAULT 0,
+    createdAt INTEGER NOT NULL
+);
+
+selectById:
+SELECT * FROM measured_point WHERE id = ?;
+
+insert:
+INSERT INTO measured_point(
+    lat, lon, altM, sigmaM, samplesAccepted, samplesRejected,
+    durationSec, spreadRmsM, meanCn0, satsUsed, hasL5, createdAt
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+lastInsertedId:
+SELECT last_insert_rowid();

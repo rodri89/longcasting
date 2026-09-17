@@ -1,0 +1,6 @@
+-- v2 -> v3: marca las tomas hechas en modo rapido (un solo fix, sin promediar).
+--
+-- Va en la base y no se deduce de la sigma porque el ranking las tiene que poder distinguir:
+-- una marca rapida trae ~7 m de error y no puede aparecer al lado de una promediada como si
+-- fueran lo mismo.
+ALTER TABLE throw_record ADD COLUMN quickMode INTEGER NOT NULL DEFAULT 0;

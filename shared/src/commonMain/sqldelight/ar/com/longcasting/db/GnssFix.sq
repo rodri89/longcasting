@@ -1,0 +1,36 @@
+-- Traza cruda. Guardar todos los fixes cuesta muy poco (~1/s durante unos minutos por tiro)
+-- y permite reprocesar mediciones viejas con un estimador mejor sin volver a la cancha.
+-- `role`: 'origin' | 'landing' | 'track'.
+CREATE TABLE gnss_fix (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    throwId INTEGER REFERENCES throw_record(id) ON DELETE CASCADE,
+    pointId INTEGER REFERENCES measured_point(id) ON DELETE CASCADE,
+    role TEXT NOT NULL,
+    tMillis INTEGER NOT NULL,
+    lat REAL NOT NULL,
+    lon REAL NOT NULL,
+    altM REAL NOT NULL,
+    accuracyM REAL NOT NULL,
+    satsUsed INTEGER,
+    cn0 REAL,
+    accepted INTEGER AS kotlin.Boolean NOT NULL
+);
+
+CREATE INDEX gnss_fix_throw ON gnss_fix(throwId);
+CREATE INDEX gnss_fix_point ON gnss_fix(pointId);
+
+insert:
+INSERT INTO gnss_fix(throwId, pointId, role, tMillis, lat, lon, altM, accuracyM, satsUsed, cn0, accepted)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+selectByThrow:
+SELECT * FROM gnss_fix WHERE throwId = ? ORDER BY tMillis ASC;
+
+selectByPoint:
+SELECT * FROM gnss_fix WHERE pointId = ? ORDER BY tMillis ASC;
+
+attachToThrow:
+UPDATE gnss_fix SET throwId = ? WHERE pointId = ?;
+
+countAll:
+SELECT count(*) FROM gnss_fix;

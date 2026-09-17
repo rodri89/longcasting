@@ -1,0 +1,40 @@
+-- Plomada. `minLineMm` es el diametro minimo de hilo que exige el reglamento para ese peso
+-- (100 g -> 0,25 mm; 125 g -> 0,28; 150 g -> 0,31; 175 g -> 0,35). El dato se guarda desde
+-- la primera version aunque la validacion con micrometro sea roadmap.
+CREATE TABLE sinker (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    grams INTEGER NOT NULL,
+    label TEXT NOT NULL,
+    minLineMm REAL,
+    archived INTEGER AS kotlin.Boolean NOT NULL DEFAULT 0
+);
+
+CREATE UNIQUE INDEX sinker_grams_unique ON sinker(grams);
+
+selectAll:
+SELECT * FROM sinker WHERE archived = 0 ORDER BY grams ASC;
+
+selectById:
+SELECT * FROM sinker WHERE id = ?;
+
+-- Igual que en shooter: los archivados siguen ocupando el peso por el indice unico.
+selectByGrams:
+SELECT * FROM sinker WHERE grams = ?;
+
+countAll:
+SELECT count(*) FROM sinker;
+
+insert:
+INSERT INTO sinker(grams, label, minLineMm, archived) VALUES (?, ?, ?, 0);
+
+update:
+UPDATE sinker SET grams = ?, label = ?, minLineMm = ? WHERE id = ?;
+
+archive:
+UPDATE sinker SET archived = 1 WHERE id = ?;
+
+restore:
+UPDATE sinker SET archived = 0 WHERE id = ?;
+
+lastInsertedId:
+SELECT last_insert_rowid();

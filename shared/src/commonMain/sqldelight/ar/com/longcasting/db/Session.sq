@@ -1,0 +1,46 @@
+-- Una jornada en la cancha. `originPointId` es el vertice: se marca una vez y todos los tiros
+-- del dia lo referencian, en vez de re-ocupar el punto en cada tiro.
+--
+-- Los comentarios van arriba del CREATE TABLE y no entre las columnas a proposito: SQLite
+-- guarda el DDL textual, y un comentario suelto entre columnas rompe cualquier ALTER TABLE
+-- que tenga que reescribir la definicion.
+CREATE TABLE session (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    startedAt INTEGER NOT NULL,
+    endedAt INTEGER,
+    windNote TEXT,
+    notes TEXT,
+    originPointId INTEGER REFERENCES measured_point(id)
+);
+
+selectAll:
+SELECT * FROM session ORDER BY startedAt DESC;
+
+selectById:
+SELECT * FROM session WHERE id = ?;
+
+selectOpen:
+SELECT * FROM session WHERE endedAt IS NULL ORDER BY startedAt DESC LIMIT 1;
+
+insert:
+INSERT INTO session(name, startedAt, endedAt, windNote, notes, originPointId)
+VALUES (?, ?, NULL, ?, ?, NULL);
+
+setOrigin:
+UPDATE session SET originPointId = ? WHERE id = ?;
+
+clearOrigin:
+UPDATE session SET originPointId = NULL WHERE id = ?;
+
+close:
+UPDATE session SET endedAt = ? WHERE id = ?;
+
+update:
+UPDATE session SET name = ?, windNote = ?, notes = ? WHERE id = ?;
+
+delete:
+DELETE FROM session WHERE id = ?;
+
+lastInsertedId:
+SELECT last_insert_rowid();

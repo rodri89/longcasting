@@ -1,0 +1,5 @@
+-- v1 -> v2: el origen (vertice de la cancha) pasa a ser de la jornada.
+--
+-- Antes vivia solo en memoria del ViewModel y habia que re-ocuparlo 60 s en cada tiro. Ahora
+-- se marca una vez por sesion y queda en la base, asi que sobrevive a cerrar la app.
+ALTER TABLE session ADD COLUMN originPointId INTEGER REFERENCES measured_point(id);
