@@ -66,8 +66,8 @@ android {
         applicationId = "ar.com.longcasting"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 4
-        versionName = "1.0.3"
+        versionCode = 5
+        versionName = "1.0.4"
     }
     packaging {
         resources {
