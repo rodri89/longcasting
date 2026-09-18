@@ -39,26 +39,36 @@ class MainActivity : ComponentActivity() {
         // Hace falta la Activity ya adjunta antes de inicializar: el formulario de consentimiento
         // UMP se presenta sobre ella, no alcanza con el Context de la Application.
         (graph.ads as? AndroidAdsService)?.attachActivity(this)
-        lifecycleScope.launch { graph.ads.initialize() }
+        lifecycleScope.launch {
+            try {
+                graph.ads.initialize()
+            } catch (e: Exception) {
+                android.util.Log.e("Longcasting", "AdMob init failed", e)
+            }
+        }
 
         setContent { App(graph, darkTheme = darkTheme, bannerContent = { BannerAdView() }) }
     }
 
     override fun onStart() {
         super.onStart()
-        (graph.ads as? AndroidAdsService)?.attachActivity(this)
-        val engine = graph.locationEngine as? AndroidLocationEngine
-        if (engine != null && !engine.hasPreciseLocation()) {
-            // Se piden las dos: en Android 12+ pedir solo la precisa muestra igual la opcion
-            // de "aproximada", y con esa el proveedor GPS no entrega nada util.
-            requestPermissions.launch(
-                arrayOf(
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
+        try {
+            (graph.ads as? AndroidAdsService)?.attachActivity(this)
+            val engine = graph.locationEngine as? AndroidLocationEngine
+            if (engine != null && !engine.hasPreciseLocation()) {
+                // Se piden las dos: en Android 12+ pedir solo la precisa muestra igual la opcion
+                // de "aproximada", y con esa el proveedor GPS no entrega nada util.
+                requestPermissions.launch(
+                    arrayOf(
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                    )
                 )
-            )
-        } else {
-            startEngineIfAllowed()
+            } else {
+                startEngineIfAllowed()
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("Longcasting", "onStart failed", e)
         }
     }
 
