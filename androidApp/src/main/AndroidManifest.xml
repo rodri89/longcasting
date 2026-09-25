@@ -25,6 +25,13 @@
             android:value="ca-app-pub-3758335156050794~2462837723"
             tools:replace="android:value" />
 
+        <!-- Deshabilitar WorkManager para evitar crash de base de datos -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            android:exported="false"
+            tools:node="remove" />
+
         <activity
             android:exported="true"
             android:name=".MainActivity"
